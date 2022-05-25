@@ -13,6 +13,13 @@ const byte address[6] = "00001";
 
 int brightness = 0;
 
+/*
+	-1 -> none (default)
+	0 -> increase
+	1 -> decrease
+*/
+int lastValue = -1;
+
 void setup() {
 	radio.begin();
   	radio.openReadingPipe(0, address);
@@ -29,16 +36,23 @@ void loop() {
 	if (radio.available()) {
 		char message[32] = "";
     	radio.read(&message, sizeof(message));
-		if (strcmp(message, "INCREASE") == 0) {
-			digitalWrite(LEFT_LED_PIN, HIGH);
-      	digitalWrite(RIGHT_LED_PIN, LOW);      
-      	if (brightness < 255) brightness++;
-		} else {
-			digitalWrite(LEFT_LED_PIN, LOW);
-			digitalWrite(RIGHT_LED_PIN, HIGH);      
-			brightness--;
-		}
+		if (strcmp(message, "INCREASE") == 0) lastValue = 0;
+		else if (strcmp(message, "DECREASE") == 0) lastValue = 1;
 	}
+
+	// Increase
+	if (lastValue == 0) {
+		digitalWrite(LEFT_LED_PIN, HIGH);
+      digitalWrite(RIGHT_LED_PIN, LOW);      
+      if (brightness < 255) brightness++;
+	} 
+	// Decrease
+	else if (lastValue == 1) {
+		digitalWrite(LEFT_LED_PIN, LOW);
+		digitalWrite(RIGHT_LED_PIN, HIGH);      
+		brightness--;
+	}
+	
 	if (brightness < 0) brightness = 0;
 	analogWrite(PWM_LED_PIN, brightness);
 }
